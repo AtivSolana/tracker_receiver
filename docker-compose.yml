@@ -1,0 +1,14 @@
+version: "3.8"
+services:
+  receiver:
+    container_name: receiver
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - ./:/app
+    environment:
+      - MINT_ACCOUNT=${MINT_ACCOUNT}
+      - DB_URL=${DB_URL}
+      - MQ_ENDPOINT=${MQ_ENDPOINT}
