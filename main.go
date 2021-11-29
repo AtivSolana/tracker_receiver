@@ -77,7 +77,7 @@ func main() {
 
         msgs, err := ch.Consume(
                 q.Name, // queue
-                "b",     // consumer
+                "",     // consumer
                 false,   // auto ack
                 false,  // exclusive
                 false,  // no local
