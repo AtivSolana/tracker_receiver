@@ -90,7 +90,7 @@ func main() {
         failOnError(err, "Failed to connect Database")
         defer dbpool.Close()
 
-        sqlStatementInsert := fmt.Sprintf(`INSERT INTO %s (owner, amount, slot) VALUES ($1, $2, $3) ON CONFLICT(owner) WHERE $3 >= slot DO UPDATE SET amount=$2, slot=$3 RETURNING owner`,MINT_ACCOUNT)
+        sqlStatementInsert := fmt.Sprintf(`INSERT INTO "%s" (owner, amount, slot) VALUES ($1, $2, $3) ON CONFLICT(owner) WHERE $3 >= slot DO UPDATE SET amount=$2, slot=$3 RETURNING owner`,MINT_ACCOUNT)
         log.Printf("connected") 
         forever := make(chan bool)
 
