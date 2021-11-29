@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/joho/godotenv"
 	"github.com/near/borsh-go"
 	"github.com/streadway/amqp"
 )
@@ -24,23 +23,19 @@ func failOnError(err error, msg string) {
         }
 }
 
-func goDotEnvVariable(key string) string {
-        
-        err := godotenv.Load()
-        failOnError(err, "enviornment variables loading failed")
-
-        return os.Getenv(key)
-}
-
-
-
 func main() {
 
-        
+        /////////// for locat testing ////////////
+        // err := godotenv.Load(".env")
+    
+        // if err != nil {
+        //    log.Fatal("Error loading .env file")
+        //  }
+        //////////////////////////////////////////
 
-	MINT_ACCOUNT := goDotEnvVariable("MINT_ACCOUNT")
-        DATABASE_URL := goDotEnvVariable("DB_URL")
-        MQ_ENDPOINT := goDotEnvVariable("MQ_ENDPOINT")
+	MINT_ACCOUNT := os.Getenv("MINT_ACCOUNT")
+        DATABASE_URL := os.Getenv("DB_URL")
+        MQ_ENDPOINT := os.Getenv("MQ_ENDPOINT")
 
 	conn, err := amqp.Dial(MQ_ENDPOINT)
         
@@ -95,8 +90,8 @@ func main() {
         failOnError(err, "Failed to connect Database")
         defer dbpool.Close()
 
-        sqlStatement := fmt.Sprintf(`INSERT INTO %s (owner, amount, slot) VALUES ($1, $2, $3) ON CONFLICT(owner) DO UPDATE SET amount=$2, slot=$3 RETURNING owner`,MINT_ACCOUNT)
-        
+        sqlStatementInsert := fmt.Sprintf(`INSERT INTO %s (owner, amount, slot) VALUES ($1, $2, $3) ON CONFLICT(owner) WHERE $3 >= slot DO UPDATE SET amount=$2, slot=$3 RETURNING owner`,MINT_ACCOUNT)
+        log.Printf("connected") 
         forever := make(chan bool)
 
         go func() {
@@ -105,19 +100,18 @@ func main() {
                         message := new(Msg)
                         err = borsh.Deserialize(message, d.Body)
                         failOnError(err, "deserialize msg failed")
-
-                        if err != nil {
-                                log.Printf(" [x] %s", err)
-                        }
+                        
                         owner := ""
-                        err := dbpool.QueryRow(context.Background(),sqlStatement, message.Owner, message.Amount, message.Slot).Scan(&owner)
-                        failOnError(err, "insert into db failed")
-                        log.Printf("{")
-                        log.Printf(" [owner] %s", owner)
-                        log.Printf(" [amount] %s", message.Amount)
-                        log.Printf(" [slot] %d", message.Slot)
-                        log.Printf("}")
+                        error := dbpool.QueryRow(context.Background(),sqlStatementInsert, message.Owner, message.Amount, message.Slot).Scan(&owner)       
+                        failOnError(error, "Insert into DB Failed")
+                       
+                        // log.Printf("{")
+                        // log.Printf(" [owner] %s", owner)
+                        // log.Printf(" [amount] %s", message.Amount)
+                        // log.Printf(" [slot] %d", message.Slot)
+                        // log.Printf("}")
                         d.Ack(false)
+        
                 }
         }()
         <-forever
