@@ -42,7 +42,7 @@ func main() {
         MQ_ENDPOINT := fmt.Sprintf(`amqp://%s:%s@%s`, MQ_USER, MQ_PASSWORD,MQ_HOST)
 
 	conn, err := amqp.Dial(MQ_ENDPOINT)
-        
+        log.Printf("mq connected") 
         failOnError(err, "Failed to connect to RabbitMQ")
         defer conn.Close()
 
@@ -94,8 +94,10 @@ func main() {
         failOnError(err, "Failed to connect Database")
         defer dbpool.Close()
 
+        log.Printf("db connected") 
+
         sqlStatementInsert := fmt.Sprintf(`INSERT INTO "%s" (owner, amount, slot) VALUES ($1, $2, $3) ON CONFLICT(owner) WHERE $3 >= slot DO UPDATE SET amount=$2, slot=$3 RETURNING owner`,MINT_ACCOUNT)
-        log.Printf("connected") 
+        
         forever := make(chan bool)
 
         go func() {
