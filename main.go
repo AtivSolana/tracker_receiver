@@ -25,17 +25,21 @@ func failOnError(err error, msg string) {
 
 func main() {
 
-        /////////// for locat testing ////////////
+        ///////// for locat testing ////////////
         // err := godotenv.Load(".env")
     
         // if err != nil {
         //    log.Fatal("Error loading .env file")
         //  }
-        //////////////////////////////////////////
+        ////////////////////////////////////////
 
 	MINT_ACCOUNT := os.Getenv("MINT_ACCOUNT")
         DATABASE_URL := os.Getenv("DB_URL")
-        MQ_ENDPOINT := os.Getenv("MQ_ENDPOINT")
+        MQ_HOST := os.Getenv("MQ_HOST")
+        MQ_USER := os.Getenv("MQ_USER")
+        MQ_PASSWORD := os.Getenv("MQ_PASSWORD")
+
+        MQ_ENDPOINT := fmt.Sprintf(`amqp://%s:%s@%s`, MQ_USER, MQ_PASSWORD,MQ_HOST)
 
 	conn, err := amqp.Dial(MQ_ENDPOINT)
         
